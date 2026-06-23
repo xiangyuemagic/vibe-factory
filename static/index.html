@@ -451,8 +451,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
   <h2>💬 完善你的方案</h2>
   <p class="subtitle" style="margin-bottom:12px">当前版本：<strong id="iterate-version-label">v1.0</strong></p>
   <div id="iterate-content"></div>
-  <button class="btn" onclick="generateNewVersion()" id="btn-new-version" style="margin-top:12px">📄 生成新版本方案</button>
-  <button class="btn btn-secondary" onclick="showResult()" style="margin-top:8px">返回方案</button>
+  <button class="btn btn-secondary" onclick="showResult()" style="margin-top:12px">返回方案</button>
 </div>
 
 <!-- ============ 无底栏 ============ -->
@@ -508,51 +507,13 @@ let iterateVersion = 1;        // 当前迭代版本号
 let iterateMessages = [];      // 多轮对话历史 [{role, content}]
 
 // ======================================================================
-// 方案持久化到 sessionStorage（刷新不丢失）
-// ======================================================================
-function savePlanStateToSession() {
-  try {
-    sessionStorage.setItem("vibefactory_planState", JSON.stringify({
-      llmResult: llmResult,
-      userChoices: userChoices,
-      iterateVersion: iterateVersion,
-      iterateMessages: iterateMessages
-    }));
-  } catch(e) { /* ignore quota errors */ }
-}
-
-function restorePlanStateFromSession() {
-  try {
-    const raw = sessionStorage.getItem("vibefactory_planState");
-    if (!raw) return;
-    const state = JSON.parse(raw);
-    if (state.llmResult) llmResult = state.llmResult;
-    if (state.userChoices) userChoices = state.userChoices;
-    if (state.iterateVersion) iterateVersion = state.iterateVersion;
-    if (state.iterateMessages) iterateMessages = state.iterateMessages;
-  } catch(e) { /* ignore parse errors */ }
-}
-
-function clearPlanStateSession() {
-  sessionStorage.removeItem("vibefactory_planState");
-}
-
-// ======================================================================
 // 初始化
 // ======================================================================
 document.addEventListener("DOMContentLoaded", async () => {
   // 检查本地存储的用户
   loadUserFromStorage();
-  // 恢复方案状态（刷新不丢失）
-  restorePlanStateFromSession();
   await loadCases();
   updateProfileUI();
-  // 如果有恢复的方案，自动显示结果页
-  if (llmResult) {
-    document.getElementById("page-result").classList.add("active");
-    document.getElementById("page-home").classList.remove("active");
-    showResult();
-  }
   if (document.getElementById("page-workshop").classList.contains("active")) {
     renderWorkshop();
   }
@@ -721,10 +682,7 @@ function restorePlan(planId) {
   if (!p) return;
   userChoices = {...p.choices};
   llmResult = JSON.parse(JSON.stringify(p.plan));
-  iterateVersion = 1;
-  iterateMessages = [];
   document.getElementById("btn-fav").textContent = p.favorited ? "✅ 已收藏" : "⭐ 收藏这个方案";
-  savePlanStateToSession();
   switchTab('quiz');
   showResult();
 }
@@ -871,10 +829,6 @@ async function submitQuiz(skip=false) {
   document.getElementById("page-loading").classList.add("active");
   document.getElementById("page-quiz").classList.remove("active");
 
-  // 重置迭代状态
-  iterateVersion = 1;
-  iterateMessages = [];
-
   // 优先调后端 API（LLM 理解），失败则降级到前端规则引擎
   try {
     const r = await fetch(`${API_BASE}/api/analyze`, {
@@ -884,7 +838,6 @@ async function submitQuiz(skip=false) {
     });
     if (r.ok) {
       llmResult = await r.json();
-      savePlanStateToSession();
       showResult();
       return;
     }
@@ -902,7 +855,6 @@ async function submitQuiz(skip=false) {
     matched_cases: matched,
     direction_cards: cards
   };
-  savePlanStateToSession();
   showResult();
 }
 
@@ -1091,14 +1043,14 @@ function showIterateQuestions(data) {
     qHtml += `</div>`;
   }
 
-  if (data.next_options && data.next_options.length > 0) {
-    qHtml += `<div style="margin:12px 0"><span style="color:#ffb347;font-weight:600">🎯 试试这些方向</span>`;
-    data.next_options.forEach((opt, i) => {
-      qHtml += `<div class="option-btn" onclick="quickIterateAnswer(${i})" id="qopt-${i}">${opt}</div>`;
+  if (data.next_questions && data.next_questions.length > 0) {
+    qHtml += `<div style="margin:12px 0"><span style="color:#ffb347;font-weight:600">❓ 我想问问你</span>`;
+    data.next_questions.forEach((q, i) => {
+      qHtml += `<div class="option-btn" onclick="quickIterateAnswer(${i})" id="qopt-${i}">${q}</div>`;
     });
     qHtml += `</div>`;
-    // 存下选项列表以便快捷回答
-    iterateQuestions = data.next_options;
+    // 存下追问列表以便快捷回答
+    iterateQuestions = data.next_questions;
   }
 
   if (data.new_direction_hint) {
@@ -1177,8 +1129,12 @@ async function submitIterate() {
   if (!data) {
     data = {
       version_update: `v${iterateVersion+1}.0 继续打磨`,
-      improvement_ideas: ["增加社交传播属性", "强化交互反馈"],
-      next_options: ["加入成就/排行榜系统", "增加分享邀请机制", "优化用户首次体验"],
+      improvement_ideas: ["考虑进一步细化", "检查差异化"],
+      next_questions: [
+        "你觉得这个方向更有信心了吗？",
+        "想做更重交互还是更轻量？",
+        "要不要试试换个目标用户群？"
+      ],
       new_direction_hint: ""
     };
   }
@@ -1195,12 +1151,12 @@ async function submitIterate() {
       msgHtml += `<div style="font-size:13px;color:#bbb;margin:4px 0">💡 ${idea}</div>`;
     });
   }
-  if (data.next_options) {
-    msgHtml += `<div style="margin:8px 0 4px;color:#6c63ff;font-weight:600">你选哪个方向？</div>`;
-    data.next_options.forEach((opt, i) => {
-      msgHtml += `<div class="option-btn" onclick="quickIterateAnswer(${i})">${opt}</div>`;
+  if (data.next_questions) {
+    msgHtml += `<div style="margin:8px 0 4px;color:#6c63ff;font-weight:600">你觉得呢？</div>`;
+    data.next_questions.forEach((q, i) => {
+      msgHtml += `<div class="option-btn" onclick="quickIterateAnswer(${i})">${q}</div>`;
     });
-    iterateQuestions = data.next_options;
+    iterateQuestions = data.next_questions;
   }
   if (data.new_direction_hint) {
     msgHtml += `<div style="margin:8px 0;padding:10px;border-radius:8px;background:rgba(108,99,255,0.1);font-size:13px;color:#c0c0ff">✨ ${data.new_direction_hint}</div>`;
@@ -1210,94 +1166,6 @@ async function submitIterate() {
 
   // 滚动到底
   convDiv.scrollTop = convDiv.scrollHeight;
-
-  // 持久化最新状态
-  savePlanStateToSession();
-}
-
-// ======================================================================
-// 生成新版本方案（从迭代对话中）
-// ======================================================================
-async function generateNewVersion() {
-  if (!llmResult || iterateMessages.length === 0) {
-    alert("还没有对话内容。先聊一轮再生成新版本吧！");
-    return;
-  }
-
-  document.getElementById("btn-new-version").textContent = "⏳ 正在生成...";
-  document.getElementById("btn-new-version").disabled = true;
-
-  const analysis = llmResult?.llm_analysis || {};
-  const cards = llmResult?.direction_cards || [];
-  const currentPlanDesc = `主题：${analysis.theme || "未定义"}
-目标用户：${analysis.target_users || "未定义"}
-交互方式：${analysis.interaction || "未定义"}
-关键特征：${(analysis.key_points || []).join("、")}
-方向卡：${cards.map((c, i) => `${i+1}. ${c.title}`).join("、")}`;
-
-  const conversationText = iterateMessages
-    .map(m => `${m.role === "assistant" ? "AI" : "用户"}：${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`)
-    .join("\n");
-
-  const systemPrompt = `你是一个黑客松创意思导师。用户和你就当前方案进行了多轮对话，现在需要你基于对话历史生成一个更完善的方案下一版。
-
-当前方案：
-${currentPlanDesc}
-
-对话历史：
-${conversationText}
-
-请输出 JSON：
-{
-  "theme": "更新后的主题名称（10字内）",
-  "target_users": "更新后的目标用户描述（20字内）",
-  "interaction": "更新后的核心交互方式（20字内）",
-  "feeling": "作品给人的感觉",
-  "key_points": ["关键特征1", "关键特征2", "关键特征3"],
-  "product_name_hint": "建议的产品方向名称（10字左右）",
-  "version_note": "本轮迭代总结（30字内，说明v1.0到v${iterateVersion}.0的改进）"
-}
-
-只输出 JSON，不要其他内容。`;
-
-  try {
-    const r = await fetch(`${API_BASE}/api/analyze`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({choices: userChoices, open_idea: systemPrompt, regenerate: true})
-    });
-    if (r.ok) {
-      const data = await r.json();
-      const newAnalysis = data.llm_analysis;
-      if (newAnalysis && !newAnalysis.error) {
-        // 更新 llmResult 中的分析
-        llmResult.llm_analysis = {
-          ...llmResult.llm_analysis,
-          theme: newAnalysis.theme || llmResult.llm_analysis?.theme,
-          target_users: newAnalysis.target_users || llmResult.llm_analysis?.target_users,
-          interaction: newAnalysis.interaction || llmResult.llm_analysis?.interaction,
-          feeling: newAnalysis.feeling || llmResult.llm_analysis?.feeling,
-          key_points: newAnalysis.key_points || llmResult.llm_analysis?.key_points,
-          product_name_hint: newAnalysis.product_name_hint || llmResult.llm_analysis?.product_name_hint
-        };
-        savePlanStateToSession();
-        // 切回结果页，显示更新后的方案
-        showResult();
-        document.getElementById("page-iterate").classList.remove("active");
-        document.getElementById("page-result").classList.add("active");
-        document.getElementById("btn-new-version").textContent = "📄 生成新版本方案";
-        document.getElementById("btn-new-version").disabled = false;
-        return;
-      }
-    }
-  } catch(e) {
-    console.log("Generate new version failed:", e);
-  }
-
-  // 降级：更新版本号并回到结果页
-  document.getElementById("btn-new-version").textContent = "📄 生成新版本方案";
-  document.getElementById("btn-new-version").disabled = false;
-  alert("生成新版本失败了，试试再聊一轮？当前版本已保持。");
 }
 
 // ======================================================================
