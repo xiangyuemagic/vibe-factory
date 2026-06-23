@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>造星工厂 - 案例库灵感源</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1040 50%, #0d1b3e 100%);
+  color: #e0e0ff;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+.container { max-width: 480px; width: 100%; padding: 20px; position: relative; }
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; background: linear-gradient(135deg, #6c63ff, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
+.subtitle { color: #8888bb; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+.btn {
+  display: block; width: 100%; padding: 14px 20px; border: none; border-radius: 12px;
+  font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  background: linear-gradient(135deg, #6c63ff, #00d4ff); color: white;
+  text-align: center; margin: 8px 0;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(108,99,255,0.4); }
+.btn:active { transform: scale(0.98); }
+.btn-secondary { background: transparent; border: 1px solid #6c63ff; color: #6c63ff; }
+.btn-small { padding: 8px 16px; font-size: 14px; display: inline-block; width: auto; }
+.option-btn {
+  display: block; width: 100%; padding: 12px 16px; margin: 6px 0; border-radius: 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: #d0d0ff; font-size: 14px; text-align: left; cursor: pointer; transition: all 0.15s;
+}
+.option-btn:hover { background: rgba(108,99,255,0.15); border-color: #6c63ff; }
+.option-btn.selected { background: rgba(108,99,255,0.25); border-color: #6c63ff; color: #fff; }
+.tags { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.tag { padding: 4px 10px; border-radius: 20px; font-size: 12px; background: rgba(108,99,255,0.2); color: #6c63ff; }
+.card {
+  background: rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.progress { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 13px; color: #8888bb; }
+.progress-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #6c63ff, #00d4ff); border-radius: 2px; transition: width 0.3s; }
+.step-label { font-size: 13px; color: #6c63ff; margin-bottom: 4px; }
+.hidden { display: none !important; }
+.page { display: none; }
+.page.active { display: block; }
+.pulse { animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.loading-text { text-align: center; padding: 40px 20px; }
+.loading-text p { margin: 8px 0; color: #8888bb; }
+.matched-case { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.matched-case:last-child { border-bottom: none; }
+.case-name { color: #ffb347; font-weight: 600; font-size: 15px; }
+.case-stats { font-size: 12px; color: #8888bb; }
+.card-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; background: linear-gradient(135deg, #ffb347, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.prompt-box { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 12px; font-family: monospace; font-size: 12px; white-space: pre-wrap; color: #aaa; margin: 8px 0; }
+.copy-btn { background: #ffb347; color: #1a1040; font-weight: 700; }
+.analysis-box { background: rgba(108,99,255,0.1); border-radius: 12px; padding: 16px; margin: 12px 0; border-left: 3px solid #6c63ff; }
+.search-box { display: flex; gap: 8px; margin: 12px 0; }
+.search-box input { flex: 1; padding: 10px 14px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e0e0ff; font-size: 14px; }
+.search-box input::placeholder { color: #6666aa; }
+.filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 12px; }
+.filter-tab { padding: 6px 14px; border-radius: 20px; font-size: 12px; background: rgba(255,255,255,0.05); color: #8888bb; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+.filter-tab:hover { background: rgba(108,99,255,0.15); }
+.filter-tab.active { background: rgba(108,99,255,0.25); border-color: #6c63ff; color: #6c63ff; }
+.stats-count { font-size: 13px; color: #8888bb; margin: 8px 0; }
+.tab-nav { display: flex; gap: 4px; margin-bottom: 16px; }
+.tab-nav button { flex: 1; padding: 10px; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.05); color: #8888bb; transition: all 0.15s; }
+.tab-nav button.active { background: rgba(108,99,255,0.25); color: #6c63ff; }
+.loading-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(108,99,255,0.2); border-top: 2px solid #6c63ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+
+<!-- Tab Nav -->
+<div class="tab-nav" id="tab-nav">
+  <button class="active" onclick="switchTab('home')">🏠 首页</button>
+  <button onclick="switchTab('quiz')">📝 找方向</button>
+  <button onclick="switchTab('workshop')">💡 灵感工坊</button>
+</div>
+
+<!-- ============ 首页 ============ -->
+<div id="page-home" class="page active">
+  <div style="text-align:center;padding:30px 0 20px">
+    <div style="font-size:48px;margin-bottom:12px">🚀</div>
+    <h1>5分钟，找到你的参赛方向</h1>
+    <p class="subtitle">基于真实收录的秒哒应用广场案例库，帮你从"不知道做什么"到"我有一个清晰、可落地的参赛方向"。</p>
+  </div>
+  <div class="tags" style="justify-content:center;margin-bottom:20px">
+    <span class="tag">🎯 基于真实案例</span>
+    <span class="tag">🚫 降低撞题风险</span>
+    <span class="tag">🤖 LLM 理解创意</span>
+  </div>
+  <button class="btn" onclick="switchTab('quiz')">📝 填问卷，找方向</button>
+  <button class="btn btn-secondary" onclick="switchTab('workshop')" style="margin-top:8px">💡 直接逛案例库</button>
+  <p style="text-align:center;font-size:12px;color:#6666aa;margin-top:20px" id="case-count-footer">案例库加载中...</p>
+</div>
+
+<!-- ============ 问卷页 ============ -->
+<div id="page-quiz" class="page">
+  <div class="progress">
+    <span id="step-num">1</span><span>/8</span>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:12.5%"></div></div>
+  </div>
+  <div id="quiz-content"></div>
+</div>
+
+<!-- ============ 加载页 ============ -->
+<div id="page-loading" class="page">
+  <div class="loading-text">
+    <div style="font-size:36px;margin-bottom:16px">🔮</div>
+    <h2>正在分析你的参赛方向...</h2>
+    <p>LLM 正在理解你的创意</p>
+    <p class="pulse" style="margin-top:20px">⏳</p>
+  </div>
+</div>
+
+<!-- ============ 结果页 ============ -->
+<div id="page-result" class="page">
+  <h2>你的参赛者画像</h2>
+  <div id="result-content"></div>
+  <button class="btn" onclick="showCards()" style="margin-top:16px">查看方向卡</button>
+  <button class="btn btn-secondary" onclick="switchTab('home')" style="margin-top:8px">返回首页</button>
+</div>
+
+<!-- ============ 灵感工坊（案例库） ============ -->
+<div id="page-workshop" class="page">
+  <h2>💡 灵感工坊</h2>
+  <p class="subtitle" id="workshop-subtitle">从收录案例中找灵感</p>
+
+  <!-- 搜索 -->
+  <div class="search-box">
+    <input type="text" id="search-input" placeholder="搜案例名称、描述..." oninput="searchCasesDelayed()">
+    <button class="btn-small" onclick="searchCases()" style="padding:8px 16px;margin:0">🔍</button>
+  </div>
+
+  <!-- 分类筛选 -->
+  <div class="filter-tabs" id="filter-tabs">
+    <span class="filter-tab active" data-cat="" onclick="filterByCategory('')">全部</span>
+    <span class="filter-tab" data-cat="工具" onclick="filterByCategory('工具')">工具</span>
+    <span class="filter-tab" data-cat="游戏" onclick="filterByCategory('游戏')">游戏</span>
+    <span class="filter-tab" data-cat="问卷" onclick="filterByCategory('问卷')">问卷</span>
+    <span class="filter-tab" data-cat="推荐" onclick="filterByCategory('推荐')">推荐</span>
+  </div>
+
+  <!-- 标签快速筛选 -->
+  <div class="filter-tabs" style="margin-bottom:4px">
+    <span class="filter-tab" data-tag="" onclick="filterByTag('')">🏷️ 全部</span>
+    <span class="filter-tab" data-tag="AI原生" onclick="filterByTag('AI原生')">🤖 AI原生</span>
+    <span class="filter-tab" data-tag="游戏互动" onclick="filterByTag('游戏互动')">🎮 游戏互动</span>
+    <span class="filter-tab" data-tag="工具效率" onclick="filterByTag('工具效率')">🔧 工具效率</span>
+    <span class="filter-tab" data-tag="学习成长" onclick="filterByTag('学习成长')">📚 学习成长</span>
+    <span class="filter-tab" data-tag="社交互动" onclick="filterByTag('社交互动')">🤝 社交互动</span>
+    <span class="filter-tab" data-tag="内容创作" onclick="filterByTag('内容创作')">✏️ 内容创作</span>
+    <span class="filter-tab" data-tag="人格测试" onclick="filterByTag('人格测试')">🧩 人格测试</span>
+  </div>
+
+  <div class="stats-count" id="cases-stats"></div>
+  <div id="workshop-results"></div>
+  <button class="btn btn-secondary" onclick="switchTab('home')" style="margin-top:12px">返回首页</button>
+</div>
+
+<!-- ============ 无底栏 ============ -->
+</div>
+
+<script>
+// ======================================================================
+// 常量 & 状态
+// ======================================================================
+const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+  ? "" : "/.netlify/functions/api";
+
+const QUIZ = [
+  {q:"你现在是什么参赛状态？", key:"q1", multi:false, options:[
+    "完全没想法，先看看有什么方向","有一个模糊的方向，但不确定好不好",
+    "有几个具体想法，想验证哪个最好","已经有了明确方向，想看会不会撞题"
+  ]},
+  {q:"你想做哪种类型的作品？", key:"q2", multi:false, options:[
+    "创意生成型（AI 写诗/画画/做音乐）","模拟互动型（模拟器/小游戏/角色扮演）",
+    "实用工具型（效率工具/学习助手/数据分析）","社交传播型（测试/人格/榜单/裂变玩法）",
+    "内容展示型（网站/PPT/信息页）"
+  ]},
+  {q:"你的目标用户是谁？", key:"q3", multi:false, options:[
+    "我自己（做给自己用的工具）","同龄人/年轻人（Z 世代）",
+    "特定人群（学生/求职者/家长/职场人）","大众用户（谁都能用）"
+  ]},
+  {q:"你希望作品给人什么感觉？", key:"q4", multi:true, max:2, options:[
+    "好玩/上头","有用/能解决问题","有故事/代入感","酷炫/视觉震撼","治愈/温暖/共鸣"
+  ]},
+  {q:"你最大的担忧是什么？（最多选 2 个）", key:"q5", multi:true, max:2, options:[
+    "怕撞题——别人已经做过了","怕做不出来——技术太复杂","怕没深度——看起来很浅","怕没传播——做了没人用"
+  ]},
+  {q:"你希望作品最后长什么样？", key:"q6", multi:false, options:[
+    "一个网页就能搞定","带点交互的 Web 应用","需要简单后端的工具","跨平台 App"
+  ]},
+  {q:"比赛目标是什么？", key:"q7", multi:false, options:[
+    "重在参与，完成比完美重要","想拿到名次/奖项","想做一个以后还能用的真产品","通过比赛验证一个创业想法"
+  ]}
+];
+
+let currentStep = 0;
+let userChoices = {};
+let llmResult = null;
+let allCases = [];
+let currentCategory = "";
+let currentTag = "";
+let searchTimer = null;
+
+// ======================================================================
+// 初始化
+// ======================================================================
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadCases();
+  // 加载灵感工坊的初始案例
+  if (document.getElementById("page-workshop").classList.contains("active")) {
+    renderWorkshop();
+  }
+});
+
+async function loadCases() {
+  try {
+    // 先尝试从 API 加载（部署时优先）
+    const r = await fetch(`${API_BASE}/api/cases`);
+    const data = await r.json();
+    allCases = data.cases || data || [];
+  } catch(e) {
+    console.log("API load failed, trying local:", e);
+    // fallback: 直接用内置数据
+    try {
+      const r2 = await fetch("/static/cases-fallback.json");
+      allCases = await r2.json();
+    } catch(e2) {
+      console.log("Fallback also failed:", e2);
+    }
+  }
+  document.getElementById("case-count-footer").textContent =
+    `当前已收录 ${allCases.length} 个应用案例，持续更新中。`;
+}
+
+// ======================================================================
+// Tab 切换
+// ======================================================================
+function switchTab(tab) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab-nav button").forEach(b => b.classList.remove("active"));
+
+  document.getElementById(`page-${tab}`).classList.add("active");
+  document.querySelector(`.tab-nav button[onclick*="'${tab}'"]`)?.classList.add("active");
+
+  if (tab === "workshop" && allCases.length > 0) {
+    renderWorkshop();
+  }
+  if (tab === "home") {
+    document.getElementById("case-count-footer").textContent =
+      `当前已收录 ${allCases.length} 个应用案例，持续更新中。`;
+  }
+}
+
+// ======================================================================
+// 问卷
+// ======================================================================
+function startQuiz() { currentStep = 0; userChoices = {}; renderQuestion(); }
+
+function renderQuestion() {
+  if (currentStep >= QUIZ.length) {
+    showOpenEnded();
+    return;
+  }
+  const q = QUIZ[currentStep];
+  const sel = userChoices[q.key] || (q.multi ? [] : "");
+  document.getElementById("step-num").textContent = currentStep + 1;
+  document.getElementById("progress-fill").style.width = ((currentStep + 1) / 8 * 100) + "%";
+
+  let html = `<div class="step-label">第 ${currentStep + 1} 步：定位你的参赛状态</div>`;
+  html += `<h2>${q.q}</h2>`;
+  if (q.multi) html += `<p style="font-size:12px;color:#8888bb;margin-bottom:8px">最多选 ${q.max} 个</p>`;
+
+  q.options.forEach((opt, i) => {
+    const isSelected = q.multi ? sel.includes(opt) : sel === opt;
+    html += `<div class="option-btn ${isSelected?'selected':''}" onclick="selectOption(${i})">${opt}</div>`;
+  });
+
+  html += `<button class="btn" onclick="nextQuestion()" style="margin-top:12px">${currentStep === QUIZ.length - 1 ? '下一步' : '下一题'}</button>`;
+  document.getElementById("quiz-content").innerHTML = html;
+}
+
+function selectOption(idx) {
+  const q = QUIZ[currentStep];
+  const opt = q.options[idx];
+  if (q.multi) {
+    const arr = userChoices[q.key] || [];
+    const pos = arr.indexOf(opt);
+    if (pos >= 0) arr.splice(pos, 1);
+    else if (arr.length < (q.max || 99)) arr.push(opt);
+    userChoices[q.key] = arr;
+  } else {
+    userChoices[q.key] = opt;
+  }
+  renderQuestion();
+}
+
+function nextQuestion() {
+  const q = QUIZ[currentStep];
+  const val = userChoices[q.key];
+  if (q.multi && (!val || val.length === 0)) { alert("请至少选一个"); return; }
+  if (!q.multi && !val) { alert("请选择一个"); return; }
+  currentStep++;
+  renderQuestion();
+}
+
+function showOpenEnded() {
+  document.getElementById("step-num").textContent = "8";
+  document.getElementById("progress-fill").style.width = "100%";
+  document.getElementById("quiz-content").innerHTML = `
+    <div class="step-label">第 8 步：分享你的创意</div>
+    <h2>你的想法/创意是什么？（选填）</h2>
+    <textarea id="open-idea" style="width:100%;min-height:120px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#e0e0ff;padding:12px;font-size:14px;resize:vertical;margin:8px 0" placeholder="用一两句话说一下你的创意。你的想法会被 LLM 理解，直接影响结果。"></textarea>
+    <p style="font-size:12px;color:#8888bb">💡 提交后 LLM 会分析你的创意并生成个性化方向卡。</p>
+    <button class="btn" onclick="submitQuiz()" style="margin-top:12px">生成我的参赛方向</button>
+    <button class="btn btn-secondary" onclick="submitQuiz(true)" style="margin-top:8px">跳过，先看基础推荐</button>
+  `;
+}
+
+async function submitQuiz(skip=false) {
+  const openIdea = skip ? "" : document.getElementById("open-idea")?.value || "";
+  document.getElementById("page-loading").classList.add("active");
+  document.getElementById("page-quiz").classList.remove("active");
+
+  try {
+    const r = await fetch(`${API_BASE}/api/analyze`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({choices: userChoices, open_idea: openIdea})
+    });
+    llmResult = await r.json();
+    showResult();
+  } catch(e) {
+    alert("出错了，请重试：" + e.message);
+    switchTab("home");
+  }
+}
+
+function showResult() {
+  document.getElementById("page-loading").classList.remove("active");
+  document.getElementById("page-result").classList.add("active");
+  const analysis = llmResult.llm_analysis;
+  const cases = llmResult.matched_cases || [];
+
+  let html = "";
+  if (analysis && !analysis.error) {
+    html += `<div class="analysis-box">`;
+    html += `<div style="color:#ffb347;font-weight:700;font-size:18px;margin-bottom:8px">${analysis.theme || '创意分析'}</div>`;
+    if (analysis.target_users) html += `<p>🎯 目标用户：${analysis.target_users}</p>`;
+    if (analysis.interaction) html += `<p>🕹️ 核心交互：${analysis.interaction}</p>`;
+    if (analysis.product_name_hint) html += `<p>💡 建议方向：${analysis.product_name_hint}</p>`;
+    if (analysis.key_points) html += `<p>✨ 关键特征：${analysis.key_points.join(' · ')}</p>`;
+    html += `</div>`;
+  } else {
+    html += `<p style="color:#8888bb">基于你的选择题回答，我们为你推荐以下方向。</p>`;
+  }
+
+  html += `<h2>匹配案例</h2>`;
+  cases.forEach(c => {
+    html += `<div class="matched-case"><div class="case-name">${c.name}</div>`;
+    html += `<div class="case-stats">${c.category} · 浏览量 ${c.views} · ❤️ ${c.likes}</div>`;
+    html += `<p style="font-size:13px;color:#aaa">${c.description}</p></div>`;
+  });
+
+  document.getElementById("result-content").innerHTML = html;
+}
+
+function showCards() {
+  const cards = llmResult.direction_cards || [];
+  let html = `<h2 style="margin-top:0">你的参赛方向卡</h2>`;
+
+  cards.forEach((card, i) => {
+    const labels = ["最推荐","稳妥方向","潜力方向"];
+    html += `<div class="card">`;
+    html += `<div style="font-size:12px;color:#6c63ff;margin-bottom:4px">${labels[i]}</div>`;
+    html += `<div class="card-title">${card.title}</div>`;
+    html += `<div style="display:flex;gap:12px;font-size:12px;color:#8888bb;margin:6px 0">`;
+    html += `<span>难度：${card.difficulty}</span><span>撞题：${card.collision_risk}</span><span>${card.recommend}</span>`;
+    html += `</div>`;
+    html += `<p style="font-size:14px;margin:8px 0">${card.description}</p>`;
+
+    html += `<div style="font-size:13px;font-weight:600;margin-top:12px">为什么适合你</div>`;
+    html += `<ul style="padding-left:16px;font-size:13px;color:#bbb">`;
+    card.why_you.forEach(w => html += `<li>${w}</li>`);
+    html += `</ul>`;
+
+    html += `<div style="font-size:13px;font-weight:600;margin-top:12px">MVP</div>`;
+    html += `<p style="font-size:13px;color:#bbb">${card.mvp}</p>`;
+
+    html += `<div style="font-size:13px;font-weight:600;margin-top:12px">给秒哒的下一步提示词</div>`;
+    html += `<div class="prompt-box">${card.prompt}</div>`;
+    const safePrompt = card.prompt.replace(/`/g,"\\`").replace(/\\/g,"\\\\");
+    html += `<button class="btn copy-btn" onclick="copyPrompt(this,'${safePrompt}')">📋 复制提示词</button>`;
+    html += `</div>`;
+  });
+
+  html += `<button class="btn btn-secondary" onclick="showResult()" style="margin-top:8px">返回画像</button>`;
+
+  document.getElementById("result-content").innerHTML = html;
+}
+
+function copyPrompt(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = "✅ 已复制";
+    setTimeout(() => { btn.textContent = "📋 复制提示词"; }, 2000);
+  }).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    btn.textContent = "✅ 已复制";
+    setTimeout(() => { btn.textContent = "📋 复制提示词"; }, 2000);
+  });
+}
+
+// ======================================================================
+// 灵感工坊 —— 案例库查询
+// ======================================================================
+function renderWorkshop() {
+  let filtered = [...allCases];
+
+  // 分类筛选
+  if (currentCategory) {
+    filtered = filtered.filter(c => c.category === currentCategory);
+  }
+
+  // 标签筛选
+  if (currentTag) {
+    filtered = filtered.filter(c => (c.tags || []).includes(currentTag));
+  }
+
+  // 搜索关键词
+  const keyword = document.getElementById("search-input")?.value?.toLowerCase().trim() || "";
+  if (keyword) {
+    filtered = filtered.filter(c =>
+      c.name.toLowerCase().includes(keyword) ||
+      c.description.toLowerCase().includes(keyword) ||
+      (c.tags || []).some(t => t.includes(keyword))
+    );
+  }
+
+  // 更新统计
+  document.getElementById("workshop-subtitle").textContent = `从 ${allCases.length} 个收录案例中找灵感`;
+  document.getElementById("cases-stats").textContent =
+    `找到 ${filtered.length} 个匹配案例${!keyword && !currentCategory && !currentTag ? `（共 ${allCases.length} 个收录案例）` : ""}`;
+
+  if (filtered.length === 0) {
+    document.getElementById("workshop-results").innerHTML =
+      `<p style="text-align:center;color:#6666aa;padding:40px 0">没有找到匹配的案例，试试其他筛选条件？</p>`;
+    return;
+  }
+
+  // 按浏览量排序
+  filtered.sort((a, b) => {
+    const va = parseInt(a.views) || 0;
+    const vb = parseInt(b.views) || 0;
+    return vb - va;
+  });
+
+  let html = "";
+  filtered.forEach(c => {
+    const tags = (c.tags || []).map(t => `<span class="tag">${t}</span>`).join("");
+    html += `<div class="card">`;
+    html += `<div class="case-name">${c.name}</div>`;
+    html += `<div style="font-size:12px;color:#8888bb;margin:4px 0">`;
+    html += `${c.category} · 👁️ ${c.views} · ❤️ ${c.likes} · ${c.author}</div>`;
+    html += `<p style="font-size:13px;color:#aaa;margin:8px 0">${c.description}</p>`;
+    if (c.targetUsers) html += `<p style="font-size:12px;color:#6666aa">👥 ${c.targetUsers}</p>`;
+    html += `<div class="tags" style="margin-top:6px">${tags}</div>`;
+    html += `</div>`;
+  });
+
+  document.getElementById("workshop-results").innerHTML = html;
+}
+
+function filterByCategory(cat) {
+  currentCategory = cat;
+  currentTag = "";
+  document.querySelectorAll("#filter-tabs .filter-tab").forEach(t => {
+    t.classList.toggle("active", t.dataset.cat === cat);
+  });
+  // 清空标签高亮
+  document.querySelectorAll("#page-workshop .filter-tabs .filter-tab[data-tag]").forEach(t => {
+    t.classList.toggle("active", false);
+  });
+  renderWorkshop();
+}
+
+function filterByTag(tag) {
+  currentTag = tag;
+  currentCategory = "";
+  document.querySelectorAll("#page-workshop .filter-tabs .filter-tab[data-tag]").forEach(t => {
+    t.classList.toggle("active", t.dataset.tag === tag);
+  });
+  // 清空分类高亮
+  document.querySelectorAll("#filter-tabs .filter-tab").forEach(t => {
+    t.classList.toggle("active", false);
+  });
+  renderWorkshop();
+}
+
+function searchCasesDelayed() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => renderWorkshop(), 300);
+}
+
+function searchCases() {
+  renderWorkshop();
+}
+</script>
+</body>
+</html>
