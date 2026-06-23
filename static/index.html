@@ -173,8 +173,8 @@ h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
 // ======================================================================
 // 常量 & 状态
 // ======================================================================
-const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
-  ? "" : "/.netlify/functions/api";
+const API_BASE = "";
+// 简化的本地案例匹配（无需后端 API）
 
 const QUIZ = [
   {q:"你现在是什么参赛状态？", key:"q1", multi:false, options:[
@@ -225,19 +225,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadCases() {
   try {
-    // 先尝试从 API 加载（部署时优先）
-    const r = await fetch(`${API_BASE}/api/cases`);
+    const r = await fetch("cases-fallback.json");
     const data = await r.json();
-    allCases = data.cases || data || [];
+    allCases = Array.isArray(data) ? data : (data.cases || []);
   } catch(e) {
-    console.log("API load failed, trying local:", e);
-    // fallback: 直接用内置数据
-    try {
-      const r2 = await fetch("/static/cases-fallback.json");
-      allCases = await r2.json();
-    } catch(e2) {
-      console.log("Fallback also failed:", e2);
-    }
+    console.log("Cases load failed:", e);
   }
   document.getElementById("case-count-footer").textContent =
     `当前已收录 ${allCases.length} 个应用案例，持续更新中。`;
@@ -332,18 +324,17 @@ async function submitQuiz(skip=false) {
   document.getElementById("page-loading").classList.add("active");
   document.getElementById("page-quiz").classList.remove("active");
 
-  try {
-    const r = await fetch(`${API_BASE}/api/analyze`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({choices: userChoices, open_idea: openIdea})
-    });
-    llmResult = await r.json();
-    showResult();
-  } catch(e) {
-    alert("出错了，请重试：" + e.message);
-    switchTab("home");
-  }
+  // 纯前端规则引擎（无需后端 API）
+  const analysis = analyzeOpenIdea(openIdea);
+  const matched = matchCasesLocal(analysis);
+  const cards = generateCardsLocal(analysis, matched);
+
+  llmResult = {
+    llm_analysis: analysis,
+    matched_cases: matched,
+    direction_cards: cards
+  };
+  showResult();
 }
 
 function showResult() {
@@ -423,6 +414,180 @@ function copyPrompt(btn, text) {
     btn.textContent = "✅ 已复制";
     setTimeout(() => { btn.textContent = "📋 复制提示词"; }, 2000);
   });
+}
+
+// ======================================================================
+// 纯前端规则引擎（无需后端 API）
+// ======================================================================
+
+/** 基于开放题关键词分析创意 */
+function analyzeOpenIdea(text) {
+  if (!text || !text.trim()) return null;
+
+  const t = text.toLowerCase();
+  const keywords = {
+    "学习成长": ["学习","读书","阅读","教育","知识","课程","考试","背单词","学"],
+    "游戏互动": ["游戏","闯关","互动","模拟","角色","扮演","冒险","打怪","升级","娱乐"],
+    "人格测试": ["人格","测试","测评","MBTI","心理","性格","塔罗","星座"],
+    "社交互动": ["社交","分享","群组","社区","交友","匹配","配对","聊天"],
+    "工具效率": ["工具","效率","助手","管理","记账","提醒","待办","番茄","专注"],
+    "内容创作": ["创作","写作","内容","日记","笔记","小说","写诗","画画","音乐"],
+    "AI原生": ["AI","智能","生成","大模型","GPT","自动","机器人"]
+  };
+
+  let matchedTags = [];
+  let theme = "创意互动";
+  let interaction = "交互式体验";
+  let targetUsers = "参赛者";
+
+  for (const [tag, kws] of Object.entries(keywords)) {
+    if (kws.some(kw => t.includes(kw))) {
+      matchedTags.push(tag);
+    }
+  }
+
+  if (matchedTags.includes("AI原生")) theme = "AI 智能助手";
+  else if (matchedTags.includes("游戏互动")) theme = "趣味互动游戏";
+  else if (matchedTags.includes("学习成长")) theme = "学习成长工具";
+  else if (matchedTags.includes("工具效率")) theme = "效率工具";
+  else if (matchedTags.includes("内容创作")) theme = "创作类工具";
+  else if (matchedTags.includes("社交互动")) theme = "社交互动体验";
+  else if (matchedTags.includes("人格测试")) theme = "人格测试体验";
+
+  if (matchedTags.includes("游戏互动") && matchedTags.includes("学习成长"))
+    theme = "游戏化学习";
+  if (matchedTags.includes("AI原生") && matchedTags.includes("游戏互动"))
+    theme = "AI 互动游戏";
+  if (matchedTags.includes("社交互动") && matchedTags.includes("人格测试"))
+    theme = "社交测试";
+
+  if (t.includes("多巴胺")) interaction = "激励式互动";
+  else if (t.includes("闯关")) interaction = "闯关式体验";
+  else if (t.includes("社区") || t.includes("社交")) interaction = "社区互动";
+  else if (t.includes("AI") || t.includes("智能")) interaction = "AI 驱动交互";
+
+  if (t.includes("学生") || t.includes("读书") || t.includes("学习"))
+    targetUsers = "学生/学习者";
+  else if (t.includes("职场") || t.includes("求职") || t.includes("工作"))
+    targetUsers = "职场人/求职者";
+  else if (t.includes("减肥") || t.includes("健康") || t.includes("运动"))
+    targetUsers = "健康管理人群";
+  else if (t.includes("宠物")) targetUsers = "宠物主";
+
+  // 生成方向名
+  let productName = theme;
+  if (matchedTags.length >= 2) {
+    const tagMap = {"学习成长":"学习区","游戏互动":"闯关区","AI原生":"智能区","社交互动":"互动区"};
+    const areas = matchedTags.map(t => tagMap[t] || t).filter(Boolean);
+    if (areas.length >= 2) productName = areas.join("+");
+  }
+
+  return {
+    theme: theme,
+    target_users: targetUsers,
+    interaction: interaction,
+    feeling: matchedTags.includes("游戏互动") ? "好玩/上头" : "有用/能解决问题",
+    key_points: matchedTags.slice(0, 3).length > 0
+      ? matchedTags.slice(0, 3).map(t => `主打${t}方向`)
+      : ["简洁交互", "快速落地"],
+    product_name_hint: productName || "互动创意工具"
+  };
+}
+
+/** 基于规则匹配案例 */
+function matchCasesLocal(analysis) {
+  if (!analysis || !analysis.key_points) {
+    return allCases.slice(0, 3);
+  }
+
+  const tagsFromAnalysis = new Set();
+  const tagMap = {
+    "学习成长": ["学习","读书","阅读","教育","知识","课程"],
+    "游戏互动": ["游戏","闯关","互动","模拟","角色"],
+    "人格测试": ["人格","测试","测评","MBTI","心理"],
+    "社交互动": ["社交","分享","社区","交友"],
+    "工具效率": ["工具","效率","助手","管理"],
+    "内容创作": ["创作","写作","内容","日记","笔记"],
+    "AI原生": ["AI","智能","生成","大模型"]
+  };
+
+  for (const kp of analysis.key_points) {
+    for (const [tag, kws] of Object.entries(tagMap)) {
+      if (kws.some(kw => kp.includes(kw))) {
+        tagsFromAnalysis.add(tag);
+      }
+    }
+  }
+
+  // 从选择题 q2 也提取标签
+  const q2 = userChoices.q2 || "";
+  const q2TagMap = {
+    "创意生成型": "内容创作",
+    "模拟互动型": "游戏互动",
+    "实用工具型": "工具效率",
+    "社交传播型": "社交互动"
+  };
+  if (q2TagMap[q2]) tagsFromAnalysis.add(q2TagMap[q2]);
+
+  const scored = allCases.map(c => {
+    let score = 0;
+    const cTags = c.tags || [];
+    tagsFromAnalysis.forEach(tag => {
+      if (cTags.includes(tag)) score += 2;
+    });
+    if (q2TagMap[q2] && cTags.includes(q2TagMap[q2])) score += 1;
+    return { score, case: c };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  const top = scored.filter(s => s.score > 0).map(s => s.case);
+  return top.length > 0 ? top.slice(0, 4) : allCases.slice(0, 3);
+}
+
+/** 生成方向卡 */
+function generateCardsLocal(analysis, matchedCases) {
+  const hint = (analysis && analysis.product_name_hint) ? analysis.product_name_hint : "互动创意工具";
+  const target = (analysis && analysis.target_users) ? analysis.target_users : "参赛者";
+  const interaction = (analysis && analysis.interaction) ? analysis.interaction : "交互体验";
+
+  return [
+    {
+      title: hint,
+      recommend: "⭐⭐⭐⭐⭐",
+      difficulty: "低",
+      collision_risk: "中",
+      description: `基于你的创意，推荐做一个${hint}。`,
+      why_you: [
+        interaction + "，适合你的方向",
+        matchedCases.length > 0 ? `参考案例「${matchedCases[0].name}」浏览量 ${matchedCases[0].views}` : "创意方向清晰，适合快速落地"
+      ],
+      mvp: "最小版本：一个核心交互页 + 结果展示页，3页以内完成",
+      prompt: `应用目标：${hint} 目标用户：${target} 核心流程：交互→结果 页面：3页以内 视觉风格：年轻活力、移动端优先`
+    },
+    {
+      title: "轻量互动体验",
+      recommend: "⭐⭐⭐⭐",
+      difficulty: "低",
+      collision_risk: "低",
+      description: "做一个轻量互动型应用，适合初次参赛。",
+      why_you: [
+        "交互简单，技术门槛低",
+        matchedCases.length > 1 ? `可参考「${matchedCases[1].name}」` : "适合快速验证想法"
+      ],
+      mvp: "单页交互+结果页，2页完成",
+      prompt: "应用目标：轻量互动体验 核心流程：用户操作→反馈结果 页面：2页"
+    },
+    {
+      title: "内容创作工具",
+      recommend: "⭐⭐⭐",
+      difficulty: "中",
+      collision_risk: "高",
+      description: "结合你的创意方向，做用户可参与内容创作的工具。",
+      why_you: ["有真实使用场景，容易做出差异化", "参考案例工具类应用浏览量普遍较高"],
+      mvp: "一个内容编辑页+展示页，3页",
+      prompt: "应用目标：内容创作工具 核心流程：输入→创作→输出 页面：3页"
+    }
+  ];
 }
 
 // ======================================================================
