@@ -106,8 +106,49 @@ function matchCases(choices, llmAnalysis) {
   });
 
   scored.sort((a, b) => b.score - a.score);
+
+  // 当没有任何案例被 tag 匹配命中时，用 LLM 分析结果做更宽松的匹配
   const top = scored.filter(s => s.score > 0).map(s => s.c);
-  return top.length > 0 ? top.slice(0, 4) : CASES.slice(0, 3);
+  if (top.length > 0) return top.slice(0, 4);
+
+  // 降级策略：基于 LLM 分析的 theme/interaction/user 关键词做全文模糊匹配
+  const fallbackMatches = [];
+  const fallbackKeywords = [];
+  if (llmAnalysis) {
+    if (llmAnalysis.theme) fallbackKeywords.push(llmAnalysis.theme);
+    if (llmAnalysis.interaction) fallbackKeywords.push(llmAnalysis.interaction);
+    if (llmAnalysis.target_users) fallbackKeywords.push(llmAnalysis.target_users);
+    if (llmAnalysis.product_name_hint) fallbackKeywords.push(llmAnalysis.product_name_hint);
+    // 也尝试从 key_points 提取
+    if (llmAnalysis.key_points) {
+      llmAnalysis.key_points.forEach(kp => {
+        // 提取有意义的关键词（2字以上中文、英文词）
+        const words = kp.match(/[\u4e00-\u9fa5]{2,}|[a-zA-Z]{3,}/g) || [];
+        words.forEach(w => fallbackKeywords.push(w));
+      });
+    }
+  }
+
+  if (fallbackKeywords.length > 0) {
+    const keywordStr = fallbackKeywords.join(" ").toLowerCase();
+    const keywordHits = CASES.map(c => {
+      const searchText = [c.name, c.description, c.category, c.targetUsers, ...(c.tags || [])].join(" ").toLowerCase();
+      // 用 LLM 分析出来的关键词在案例全文本中模糊匹配
+      let matchScore = 0;
+      fallbackKeywords.forEach(kw => {
+        const kwLow = kw.toLowerCase();
+        if (searchText.includes(kwLow)) matchScore += 1;
+      });
+      return { score: matchScore, c };
+    });
+    keywordHits.sort((a, b) => b.score - a.score);
+    const fuzzy = keywordHits.filter(s => s.score > 0).map(s => s.c);
+    if (fuzzy.length > 0) return fuzzy.slice(0, 4);
+  }
+
+  // 最终降级：按浏览量返回热门案例
+  const byViews = [...CASES].sort((a, b) => (parseInt(b.views) || 0) - (parseInt(a.views) || 0));
+  return byViews.slice(0, 4);
 }
 
 // —— 方向卡生成（带 LLM） ——

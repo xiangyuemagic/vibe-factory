@@ -587,7 +587,35 @@ function matchCasesLocal(analysis) {
 
   scored.sort((a, b) => b.score - a.score);
   const top = scored.filter(s => s.score > 0).map(s => s.case);
-  return top.length > 0 ? top.slice(0, 4) : allCases.slice(0, 3);
+  if (top.length > 0) return top.slice(0, 4);
+
+  // 降级：用 LLM 分析的关键词做模糊匹配
+  const fbkws = [];
+  if (analysis.theme) fbkws.push(analysis.theme);
+  if (analysis.interaction) fbkws.push(analysis.interaction);
+  if (analysis.target_users) fbkws.push(analysis.target_users);
+  if (analysis.product_name_hint) fbkws.push(analysis.product_name_hint);
+  if (analysis.key_points) {
+    analysis.key_points.forEach(kp => {
+      const words = kp.match(/[\u4e00-\u9fa5]{2,}|[a-zA-Z]{3,}/g) || [];
+      words.forEach(w => fbkws.push(w));
+    });
+  }
+
+  if (fbkws.length > 0) {
+    const fuzzy = allCases.map(c => {
+      const txt = [c.name, c.description, c.category, c.targetUsers, ...(c.tags || [])].join(" ").toLowerCase();
+      let s = 0;
+      fbkws.forEach(kw => { if (txt.includes(kw.toLowerCase())) s++; });
+      return { score: s, case: c };
+    });
+    fuzzy.sort((a, b) => b.score - a.score);
+    const hits = fuzzy.filter(f => f.score > 0).map(f => f.case);
+    if (hits.length > 0) return hits.slice(0, 4);
+  }
+
+  // 最终降级：按浏览量返回热门案例
+  return [...allCases].sort((a, b) => (parseInt(b.views) || 0) - (parseInt(a.views) || 0)).slice(0, 4);
 }
 
 /** 生成方向卡 */
