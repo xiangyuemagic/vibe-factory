@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>造星工厂 - 案例库灵感源</title>
+<title>造星工厂 - 秒哒黑客松创意导航</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -160,6 +160,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
   <button class="active" onclick="switchTab('home')">🏠 首页</button>
   <button onclick="switchTab('quiz')">📝 找方向</button>
   <button onclick="switchTab('workshop')">💡 灵感工坊</button>
+  <button onclick="switchTab('profile')" id="tab-profile">👤 我的</button>
 </div>
 
 <!-- ============ 首页（展示页） ============ -->
@@ -366,6 +367,8 @@ h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
   <h2>你的参赛者画像</h2>
   <div id="result-content"></div>
   <button class="btn" onclick="showCards()" style="margin-top:16px">查看方向卡</button>
+  <button class="btn btn-secondary" onclick="favoriteCurrentPlan()" id="btn-fav" style="margin-top:8px">⭐ 收藏这个方案</button>
+  <button class="btn btn-secondary" onclick="iteratePlan()" id="btn-iterate" style="margin-top:8px">💬 再聊聊（完善方案）</button>
   <button class="btn btn-secondary" onclick="switchTab('home')" style="margin-top:8px">返回首页</button>
 </div>
 
@@ -404,6 +407,51 @@ h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
   <div class="stats-count" id="cases-stats"></div>
   <div id="workshop-results"></div>
   <button class="btn btn-secondary" onclick="switchTab('home')" style="margin-top:12px">返回首页</button>
+</div>
+
+<!-- ============ 我的（用户注册 + 收藏历史） ============ -->
+<div id="page-profile" class="page">
+  <h2>👤 我的创意</h2>
+
+  <!-- 未登录状态 -->
+  <div id="profile-login" class="card" style="text-align:center;padding:30px 20px">
+    <div style="font-size:48px;margin-bottom:12px">🎨</div>
+    <h2 style="margin-bottom:8px">保存你的创意方案</h2>
+    <p style="color:#8888bb;font-size:14px;line-height:1.6;margin-bottom:16px">
+      输入一个名字，你的创意方案就会保存在这里。<br>
+      下次回来还能找到。
+    </p>
+    <input type="text" id="profile-name-input" placeholder="输入你的名字或昵称"
+      style="width:100%;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e0e0ff;font-size:16px;text-align:center;margin-bottom:12px">
+    <button class="btn" onclick="registerUser()">🚀 开始使用</button>
+    <p style="font-size:12px;color:#6666aa;margin-top:12px">名字仅用于本地保存，不会上传</p>
+  </div>
+
+  <!-- 已登录状态 -->
+  <div id="profile-authed" class="hidden">
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:18px;font-weight:700" id="profile-display-name"></div>
+        <div style="font-size:12px;color:#8888bb" id="profile-stats"></div>
+      </div>
+      <button class="btn-small btn-secondary" onclick="logoutUser()" style="margin:0">退出</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin:16px 0">
+      <button class="btn" style="flex:1" onclick="showProfileTab('saved')">📦 已收藏</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="showProfileTab('history')">📋 全部历史</button>
+    </div>
+
+    <div id="profile-list"></div>
+  </div>
+</div>
+
+<!-- ============ 再聊聊（多轮迭代） ============ -->
+<div id="page-iterate" class="page">
+  <h2>💬 完善你的方案</h2>
+  <p class="subtitle" style="margin-bottom:12px">当前版本：<strong id="iterate-version-label">v1.0</strong></p>
+  <div id="iterate-content"></div>
+  <button class="btn btn-secondary" onclick="showResult()" style="margin-top:12px">返回方案</button>
 </div>
 
 <!-- ============ 无底栏 ============ -->
@@ -452,49 +500,188 @@ let currentCategory = "";
 let currentTag = "";
 let searchTimer = null;
 
+// 用户系统状态
+let currentUser = null;        // { name: string, id: string }
+let planHistory = [];          // [{ id, version, savedAt, choices, openIdea, plan }]
+let iterateVersion = 1;        // 当前迭代版本号
+let iterateMessages = [];      // 多轮对话历史 [{role, content}]
+
 // ======================================================================
 // 初始化
 // ======================================================================
 document.addEventListener("DOMContentLoaded", async () => {
+  // 检查本地存储的用户
+  loadUserFromStorage();
   await loadCases();
-  // 加载灵感工坊的初始案例
+  updateProfileUI();
   if (document.getElementById("page-workshop").classList.contains("active")) {
     renderWorkshop();
   }
 });
 
-async function loadCases() {
-  try {
-    // 优先从后端 API 获取（支持筛选）
-    const r = await fetch("/api/cases");
-    if (r.ok) {
-      const data = await r.json();
-      allCases = data.cases || [];
-      document.getElementById("case-count-footer").textContent =
-        `当前已收录 ${allCases.length} 个应用案例，持续更新中。`;
-      if (document.getElementById("page-workshop").classList.contains("active")) renderWorkshop();
-      return;
-    }
-  } catch(e) {
-    console.log("API cases failed, using local:", e);
+// ======================================================================
+// 用户系统
+// ======================================================================
+function loadUserFromStorage() {
+  const saved = localStorage.getItem("vibefactory_user");
+  if (saved) {
+    try {
+      currentUser = JSON.parse(saved);
+      planHistory = loadPlanHistory();
+    } catch(e) { currentUser = null; }
   }
-  // 降级到本地
-  try {
-    const r = await fetch("cases-fallback.json");
-    const data = await r.json();
-    allCases = Array.isArray(data) ? data : (data.cases || []);
-  } catch(e) {
-    console.log("Cases load failed:", e);
-  }
-  // 更新首页案例数
-  const homeEl = document.getElementById("case-count-home");
-  if (homeEl) homeEl.textContent = allCases.length;
-  const homeEl2 = document.getElementById("case-count-home2");
-  if (homeEl2) homeEl2.textContent = allCases.length;
-  document.getElementById("case-count-footer").textContent =
-    `当前已收录 ${allCases.length} 个应用案例，持续更新中。`;
-  if (document.getElementById("page-workshop").classList.contains("active")) renderWorkshop();
 }
+
+function loadPlanHistory() {
+  if (!currentUser) return [];
+  try {
+    const data = localStorage.getItem(`vibefactory_plans_${currentUser.id}`);
+    return data ? JSON.parse(data) : [];
+  } catch(e) { return []; }
+}
+
+function savePlanHistory() {
+  if (!currentUser) return;
+  localStorage.setItem(`vibefactory_plans_${currentUser.id}`, JSON.stringify(planHistory));
+}
+
+function registerUser() {
+  const name = document.getElementById("profile-name-input").value.trim();
+  if (!name) { alert("请输入你的名字或昵称"); return; }
+  const userId = "user_" + name + "_" + Date.now().toString(36);
+  currentUser = { name, id: userId };
+  localStorage.setItem("vibefactory_user", JSON.stringify(currentUser));
+  planHistory = loadPlanHistory();
+  updateProfileUI();
+}
+
+function logoutUser() {
+  currentUser = null;
+  localStorage.removeItem("vibefactory_user");
+  planHistory = [];
+  document.getElementById("profile-list").innerHTML = "";
+  updateProfileUI();
+}
+
+function updateProfileUI() {
+  const isAuthed = currentUser !== null;
+  document.getElementById("profile-login").classList.toggle("hidden", isAuthed);
+  document.getElementById("profile-authed").classList.toggle("hidden", !isAuthed);
+  if (isAuthed) {
+    document.getElementById("profile-display-name").textContent = `👋 ${currentUser.name}`;
+    const saved = planHistory.filter(p => p.favorited).length;
+    document.getElementById("profile-stats").textContent = `已收藏 ${saved} 个方案 · 共 ${planHistory.length} 次创作`;
+    // 默认显示已收藏
+    showProfileTab('saved');
+  }
+}
+
+function showProfileTab(tab) {
+  if (!currentUser) return;
+  const list = document.getElementById("profile-list");
+  let items = tab === 'saved' ? planHistory.filter(p => p.favorited) : [...planHistory].reverse();
+
+  if (items.length === 0) {
+    list.innerHTML = `<p style="text-align:center;color:#6666aa;padding:40px 0">
+      ${tab === 'saved' ? '还没有收藏的方案。在结果页点击「收藏这个方案」即可保存。' : '还没有创作历史。去「找方向」生成第一个方案吧！'}</p>`;
+    return;
+  }
+
+  let html = "";
+  items.forEach(p => {
+    const analysis = p.plan?.llm_analysis;
+    const cards = p.plan?.direction_cards || [];
+    const title = analysis?.theme || cards[0]?.title || "创意方案";
+    const favBtn = p.favorited
+      ? `<button class="btn-small" style="background:transparent;border:1px solid #ffb347;color:#ffb347;margin:0" onclick="unfavoritePlan('${p.id}')">⭐ 已收藏</button>`
+      : `<button class="btn-small btn-secondary" style="margin:0" onclick="favoritePlan('${p.id}')">☆ 收藏</button>`;
+
+    html += `<div class="card" style="padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:16px;color:#ffb347">${title}</div>
+          <div style="font-size:12px;color:#8888bb;margin:2px 0">v${p.version} · ${new Date(p.savedAt).toLocaleString('zh-CN')}</div>
+        </div>
+        ${favBtn}
+      </div>`;
+    if (analysis?.target_users) html += `<div style="font-size:12px;color:#8888bb">🎯 ${analysis.target_users}</div>`;
+    if (cards.length > 0) {
+      html += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">`;
+      cards.forEach(c => { html += `<span class="tag">${c.title}</span>`; });
+      html += `</div>`;
+    }
+    html += `<button class="btn-small btn-secondary" style="margin-top:8px" onclick="restorePlan('${p.id}')">查看</button>`;
+    html += `</div>`;
+  });
+  list.innerHTML = html;
+}
+
+function favoriteCurrentPlan() {
+  if (!currentUser) {
+    alert("请先在「我的」页面输入名字后，再收藏方案。");
+    switchTab('profile');
+    return;
+  }
+  if (!llmResult) { alert("还没有可收藏的方案。先去生成一个方案吧！"); return; }
+
+  // 检查是否已收藏当前方案
+  const existing = planHistory.find(p =>
+    p.plan?.llm_analysis?.theme === llmResult.llm_analysis?.theme &&
+    p.choices?.q1 === userChoices.q1
+  );
+  if (existing && existing.favorited) {
+    document.getElementById("btn-fav").textContent = "✅ 已收藏";
+    return;
+  }
+
+  const version = planHistory.length > 0
+    ? Math.max(...planHistory.map(p => p.version)) + 1
+    : 1;
+
+  const planEntry = {
+    id: "plan_" + Date.now().toString(36),
+    version: version,
+    savedAt: Date.now(),
+    favorited: true,
+    choices: {...userChoices},
+    openIdea: document.getElementById("open-idea")?.value || "",
+    plan: JSON.parse(JSON.stringify(llmResult))
+  };
+
+  planHistory.push(planEntry);
+  savePlanHistory();
+  document.getElementById("btn-fav").textContent = "✅ 已收藏";
+  document.getElementById("btn-fav").style.borderColor = "#ffb347";
+  document.getElementById("btn-fav").style.color = "#ffb347";
+}
+
+function favoritePlan(planId) {
+  const p = planHistory.find(p => p.id === planId);
+  if (!p) return;
+  p.favorited = true;
+  savePlanHistory();
+  showProfileTab('saved');
+}
+
+function unfavoritePlan(planId) {
+  const p = planHistory.find(p => p.id === planId);
+  if (!p) return;
+  p.favorited = false;
+  savePlanHistory();
+  showProfileTab('saved');
+}
+
+function restorePlan(planId) {
+  const p = planHistory.find(p => p.id === planId);
+  if (!p) return;
+  userChoices = {...p.choices};
+  llmResult = JSON.parse(JSON.stringify(p.plan));
+  document.getElementById("btn-fav").textContent = p.favorited ? "✅ 已收藏" : "⭐ 收藏这个方案";
+  switchTab('quiz');
+  showResult();
+}
+
+// ======================================================================
 // Tab 切换
 // ======================================================================
 function switchTab(tab) {
@@ -526,6 +713,44 @@ function switchTab(tab) {
     document.getElementById("case-count-footer").textContent =
       `当前已收录 ${allCases.length} 个应用案例，持续更新中。`;
   }
+  if (tab === "profile") {
+    updateProfileUI();
+  }
+}
+
+// ======================================================================
+// 加载案例库
+// ======================================================================
+async function loadCases() {
+  try {
+    const r = await fetch("/api/cases");
+    if (r.ok) {
+      const data = await r.json();
+      allCases = data.cases || [];
+      updateCaseCounts();
+      return;
+    }
+  } catch(e) {
+    console.log("API cases failed, using local:", e);
+  }
+  // 降级到本地
+  try {
+    const r = await fetch("cases-fallback.json");
+    const data = await r.json();
+    allCases = Array.isArray(data) ? data : (data.cases || []);
+  } catch(e) {
+    console.log("Cases load failed:", e);
+  }
+  updateCaseCounts();
+}
+
+function updateCaseCounts() {
+  const homeEl = document.getElementById("case-count-home");
+  if (homeEl) homeEl.textContent = allCases.length;
+  const homeEl2 = document.getElementById("case-count-home2");
+  if (homeEl2) homeEl2.textContent = allCases.length;
+  const footer = document.getElementById("case-count-footer");
+  if (footer) footer.textContent = `当前已收录 ${allCases.length} 个应用案例，持续更新中。`;
 }
 
 // ======================================================================
@@ -648,7 +873,10 @@ function showResult() {
 
   html += `<h2>匹配案例</h2>`;
   cases.forEach(c => {
-    html += `<div class="matched-case"><div class="case-name">${c.name}</div>`;
+    const linkHtml = c.url
+      ? ` <a href="${c.url}" target="_blank" style="color:#6c63ff;font-size:12px;text-decoration:none">🔗 查看原文</a>`
+      : "";
+    html += `<div class="matched-case"><div class="case-name">${c.name}${linkHtml}</div>`;
     html += `<div class="case-stats">${c.category} · 浏览量 ${c.views} · ❤️ ${c.likes}</div>`;
     html += `<p style="font-size:13px;color:#aaa">${c.description}</p></div>`;
   });
@@ -704,6 +932,217 @@ function copyPrompt(btn, text) {
     btn.textContent = "✅ 已复制";
     setTimeout(() => { btn.textContent = "📋 复制提示词"; }, 2000);
   });
+}
+
+// ======================================================================
+// 多轮迭代 —— 「再聊聊」
+// ======================================================================
+
+async function iteratePlan() {
+  if (!llmResult) { alert("还没有方案可以迭代。先去生成一个方案吧！"); return; }
+  iterateVersion = 1;
+  iterateMessages = [];
+
+  document.getElementById("page-result").classList.remove("active");
+  document.getElementById("page-iterate").classList.add("active");
+  document.getElementById("iterate-version-label").textContent = "v1.0";
+
+  // 展示第一轮追问
+  showIterateQuestion();
+}
+
+function showIterateQuestion() {
+  // 构建 LLM 追问的 prompt 上下文
+  const analysis = llmResult?.llm_analysis || {};
+  const cards = llmResult?.direction_cards || [];
+  const currentPlanDesc = `方案主题：${analysis.theme || "未定义"}
+目标用户：${analysis.target_users || "未定义"}
+交互方式：${analysis.interaction || "未定义"}
+建议方向：${analysis.product_name_hint || "未定义"}
+方向卡：${cards.map((c, i) => `${i+1}. ${c.title}`).join("、")}`;
+
+  let html = `<div class="card" style="padding:14px;margin-bottom:12px">
+    <div style="font-size:13px;color:#8888bb">当前方案（v${iterateVersion}.0）</div>
+    <div style="font-size:14px;margin:6px 0">${currentPlanDesc}</div>
+  </div>
+  <div id="iterate-conversation"></div>
+  <div style="margin-top:12px">
+    <textarea id="iterate-input" style="width:100%;min-height:80px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#e0e0ff;padding:12px;font-size:14px;resize:vertical" placeholder="说说你对当前方案的看法，想怎么改进？"></textarea>
+    <button class="btn" onclick="submitIterate()" style="margin-top:8px">💬 继续聊</button>
+  </div>`;
+
+  document.getElementById("iterate-content").innerHTML = html;
+
+  // 尝试调后端 API 获取 LLM 生成的追问
+  try {
+    const r = await fetch(`${API_BASE}/api/iterate`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        choices: userChoices,
+        llm_result: llmResult,
+        user_response: "我想看看当前方案有什么可以改进的地方",
+        conversation_history: [],
+        version: iterateVersion
+      })
+    });
+    if (r.ok) {
+      const data = await r.json();
+      showIterateQuestions(data);
+      return;
+    }
+  } catch(e) {
+    console.log("Iterate API failed:", e);
+  }
+
+  // 降级：本地生成追问
+  showIterateQuestions({
+    version_update: `v${iterateVersion+1}.0 继续打磨`,
+    improvement_ideas: ["考虑进一步差异化", "检查可落地性"],
+    next_questions: [
+      "你觉得当前方案最想改哪个方向？",
+      "有没有其他创意元素想加进来？",
+      "你觉得谁会最需要这个产品？"
+    ],
+    new_direction_hint: ""
+  });
+}
+
+function showIterateQuestions(data) {
+  const html = document.getElementById("iterate-content");
+  let qHtml = "";
+
+  if (data.improvement_ideas && data.improvement_ideas.length > 0) {
+    qHtml += `<div style="margin:8px 0"><span style="color:#6c63ff;font-weight:600">💡 改进方向</span>`;
+    data.improvement_ideas.forEach(idea => {
+      qHtml += `<div style="font-size:13px;color:#bbb;margin:4px 0">→ ${idea}</div>`;
+    });
+    qHtml += `</div>`;
+  }
+
+  if (data.next_questions && data.next_questions.length > 0) {
+    qHtml += `<div style="margin:12px 0"><span style="color:#ffb347;font-weight:600">❓ 我想问问你</span>`;
+    data.next_questions.forEach((q, i) => {
+      qHtml += `<div class="option-btn" onclick="quickIterateAnswer(${i})" id="qopt-${i}">${q}</div>`;
+    });
+    qHtml += `</div>`;
+    // 存下追问列表以便快捷回答
+    iterateQuestions = data.next_questions;
+  }
+
+  if (data.new_direction_hint) {
+    qHtml += `<div style="margin:8px 0;padding:10px;border-radius:8px;background:rgba(108,99,255,0.1);font-size:13px;color:#c0c0ff">✨ ${data.new_direction_hint}</div>`;
+  }
+
+  const convDiv = document.getElementById("iterate-conversation");
+
+  // 加 AI 消息到对话
+  if (iterateQuestions) {
+    let msgHtml = `<div style="margin:8px 0"><div style="display:flex;gap:8px;align-items:flex-start">`;
+    msgHtml += `<div style="width:28px;height:28px;border-radius:50%;background:rgba(108,99,255,0.2);color:#6c63ff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">AI</div>`;
+    msgHtml += `<div style="font-size:14px;color:#d0d0ff;flex:1">`;
+    if (data.version_update) msgHtml += `<div style="font-weight:600;margin-bottom:4px">${data.version_update}</div>`;
+    msgHtml += `我们来看看怎么把你的方案做得更好。你对上面哪些方向感兴趣？或者你有自己的想法？</div></div></div>`;
+    convDiv.innerHTML = msgHtml;
+  }
+}
+// 保存 iterateQuestions 供点击调用
+let iterateQuestions = [];
+
+function quickIterateAnswer(idx) {
+  const q = iterateQuestions[idx];
+  if (!q) return;
+  document.getElementById("iterate-input").value = q;
+}
+
+async function submitIterate() {
+  const text = document.getElementById("iterate-input").value.trim();
+  if (!text) { alert("说点什么吧～"); return; }
+
+  iterateVersion++;
+
+  // 添加用户消息到对话
+  const convDiv = document.getElementById("iterate-conversation");
+  let userMsg = `<div style="margin:8px 0"><div style="display:flex;gap:8px;align-items:flex-start;justify-content:flex-end">`;
+  userMsg += `<div style="font-size:14px;color:#e0e0ff;flex:1;text-align:right">${text}</div>`;
+  userMsg += `<div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">我</div>`;
+  userMsg += `</div></div>`;
+  convDiv.innerHTML += userMsg;
+
+  // 存对话历史
+  iterateMessages.push({role: "user", content: text});
+
+  // 显示加载
+  document.getElementById("iterate-input").value = "";
+  const loadingMsg = `<div style="margin:8px 0;text-align:center;color:#8888bb;font-size:13px">⏳ AI 正在思考...</div>`;
+  convDiv.innerHTML += loadingMsg;
+
+  document.getElementById("iterate-version-label").textContent = `v${iterateVersion}.0`;
+
+  let data = null;
+  try {
+    const r = await fetch(`${API_BASE}/api/iterate`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        choices: userChoices,
+        llm_result: llmResult,
+        user_response: text,
+        conversation_history: iterateMessages,
+        version: iterateVersion
+      })
+    });
+    if (r.ok) {
+      data = await r.json();
+    }
+  } catch(e) {
+    console.log("Iterate API failed:", e);
+  }
+
+  // 移除加载消息
+  convDiv.innerHTML = convDiv.innerHTML.replace(`<div style="margin:8px 0;text-align:center;color:#8888bb;font-size:13px">⏳ AI 正在思考...</div>`, "");
+
+  // 降级
+  if (!data) {
+    data = {
+      version_update: `v${iterateVersion+1}.0 继续打磨`,
+      improvement_ideas: ["考虑进一步细化", "检查差异化"],
+      next_questions: [
+        "你觉得这个方向更有信心了吗？",
+        "想做更重交互还是更轻量？",
+        "要不要试试换个目标用户群？"
+      ],
+      new_direction_hint: ""
+    };
+  }
+
+  iterateMessages.push({role: "assistant", content: JSON.stringify(data)});
+
+  // 展示 AI 回答
+  let msgHtml = `<div style="margin:8px 0"><div style="display:flex;gap:8px;align-items:flex-start">`;
+  msgHtml += `<div style="width:28px;height:28px;border-radius:50%;background:rgba(108,99,255,0.2);color:#6c63ff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">AI</div>`;
+  msgHtml += `<div style="font-size:14px;color:#d0d0ff;flex:1">`;
+  if (data.version_update) msgHtml += `<div style="font-weight:600;margin-bottom:4px;color:#ffb347">${data.version_update}</div>`;
+  if (data.improvement_ideas) {
+    data.improvement_ideas.forEach(idea => {
+      msgHtml += `<div style="font-size:13px;color:#bbb;margin:4px 0">💡 ${idea}</div>`;
+    });
+  }
+  if (data.next_questions) {
+    msgHtml += `<div style="margin:8px 0 4px;color:#6c63ff;font-weight:600">你觉得呢？</div>`;
+    data.next_questions.forEach((q, i) => {
+      msgHtml += `<div class="option-btn" onclick="quickIterateAnswer(${i})">${q}</div>`;
+    });
+    iterateQuestions = data.next_questions;
+  }
+  if (data.new_direction_hint) {
+    msgHtml += `<div style="margin:8px 0;padding:10px;border-radius:8px;background:rgba(108,99,255,0.1);font-size:13px;color:#c0c0ff">✨ ${data.new_direction_hint}</div>`;
+  }
+  msgHtml += `</div></div></div>`;
+  convDiv.innerHTML += msgHtml;
+
+  // 滚动到底
+  convDiv.scrollTop = convDiv.scrollHeight;
 }
 
 // ======================================================================
@@ -961,7 +1400,10 @@ function renderWorkshop() {
     html += `${c.category} · 👁️ ${c.views} · ❤️ ${c.likes} · ${c.author}</div>`;
     html += `<p style="font-size:13px;color:#aaa;margin:8px 0">${c.description}</p>`;
     if (c.targetUsers) html += `<p style="font-size:12px;color:#6666aa">👥 ${c.targetUsers}</p>`;
-    html += `<div class="tags" style="margin-top:6px">${tags}</div>`;
+    const linkHtml = c.url
+      ? ` <a href="${c.url}" target="_blank" style="color:#6c63ff;font-size:13px;text-decoration:none">🔗 去秒哒查看 →</a>`
+      : "";
+    html += `<div class="tags" style="margin-top:6px">${tags}${linkHtml}</div>`;
     html += `</div>`;
   });
 
