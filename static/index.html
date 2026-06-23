@@ -260,6 +260,21 @@ function switchTab(tab) {
   document.getElementById(`page-${tab}`).classList.add("active");
   document.querySelector(`.tab-nav button[onclick*="'${tab}'"]`)?.classList.add("active");
 
+  if (tab === "quiz") {
+    // 切换到找方向时自动开始问卷
+    if (!Object.keys(userChoices).length) {
+      startQuiz();
+    } else {
+      // 恢复上次的进度
+      if (currentStep < QUIZ.length) {
+        renderQuestion();
+      } else {
+        document.getElementById("step-num").textContent = "8";
+        document.getElementById("progress-fill").style.width = "100%";
+        showOpenEnded();
+      }
+    }
+  }
   if (tab === "workshop" && allCases.length > 0) {
     renderWorkshop();
   }
