@@ -951,7 +951,7 @@ async function iteratePlan() {
   showIterateQuestion();
 }
 
-function showIterateQuestion() {
+async function showIterateQuestion() {
   // 构建 LLM 追问的 prompt 上下文
   const analysis = llmResult?.llm_analysis || {};
   const cards = llmResult?.direction_cards || [];
