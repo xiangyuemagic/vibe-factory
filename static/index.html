@@ -73,6 +73,83 @@ h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
 .tab-nav button.active { background: rgba(108,99,255,0.25); color: #6c63ff; }
 .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(108,99,255,0.2); border-top: 2px solid #6c63ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* =========== 首页展示页新样式 =========== */
+.hero-section { text-align: center; padding: 20px 0 10px; }
+.hero-badge { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; background: rgba(108,99,255,0.2); color: #6c63ff; margin-bottom: 12px; }
+.hero-title { font-size: 28px; font-weight: 800; margin-bottom: 12px; background: linear-gradient(135deg, #6c63ff, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-subtitle { color: #8888bb; font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
+.hero-stats { display: flex; justify-content: center; gap: 8px; margin-top: 16px; font-size: 13px; color: #6666aa; }
+.hero-stats strong { color: #c0c0ff; }
+.hero-btn { background: linear-gradient(135deg, #ff8c00, #ffb347); color: #1a0a00; }
+.section-title { font-size: 20px; font-weight: 700; text-align: center; margin: 24px 0 12px; color: #d0d0ff; }
+.section-subtitle { text-align: center; color: #8888bb; font-size: 14px; margin-bottom: 12px; }
+
+/* 痛点卡片 */
+.pain-cards { display: flex; flex-direction: column; gap: 8px; }
+.pain-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+.pain-icon { font-size: 24px; flex-shrink: 0; }
+.pain-text { font-size: 14px; color: #b0b0dd; line-height: 1.5; }
+
+/* 流程步骤 */
+.flow-steps { padding: 4px 0; }
+.flow-step { display: flex; gap: 14px; align-items: flex-start; padding: 8px 0; }
+.step-num { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6c63ff, #00d4ff); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.step-body { flex: 1; }
+.step-title { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+.step-desc { font-size: 13px; color: #8888bb; line-height: 1.5; }
+.flow-arrow { text-align: center; color: #6c63ff; font-size: 18px; padding: 2px 0; }
+
+/* 对比展示 */
+.demo-input-box { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); }
+.demo-input-label { font-size: 12px; color: #6666aa; margin-bottom: 6px; }
+.demo-input-text { font-size: 14px; color: #d0d0ff; line-height: 1.6; }
+.compare-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.compare-card { border-radius: 12px; padding: 16px; }
+.compare-card.old { background: rgba(255,80,80,0.08); border: 1px solid rgba(255,80,80,0.15); }
+.compare-card.new { background: rgba(0,200,100,0.08); border: 1px solid rgba(0,200,100,0.15); }
+.compare-label { font-size: 12px; margin-bottom: 6px; }
+.compare-card.old .compare-label { color: #ff6666; }
+.compare-card.new .compare-label { color: #33cc88; }
+.compare-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.compare-card.old .compare-title { color: #ff8888; }
+.compare-title-new { background: linear-gradient(135deg, #33cc88, #66ffaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.compare-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.compare-comment { font-size: 13px; color: #9999bb; line-height: 1.5; }
+.compare-vs { text-align: center; font-size: 14px; font-weight: 700; color: #6c63ff; }
+
+/* 更多结果 */
+.more-results { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.result-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.03); }
+.result-avatar { width: 28px; height: 28px; border-radius: 50%; background: rgba(108,99,255,0.2); color: #6c63ff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.result-input { font-size: 13px; color: #8888bb; margin-bottom: 2px; }
+.result-output { font-size: 13px; color: #c0c0ff; }
+.demo-footnote { text-align: center; font-size: 12px; color: #6666aa; margin: 12px 0 4px; }
+
+/* 案例库规模 */
+.library-section { text-align: center; padding: 20px; background: rgba(108,99,255,0.06); border-radius: 16px; margin: 16px 0; border: 1px solid rgba(108,99,255,0.1); }
+.library-section .btn { margin-top: 12px; }
+.library-stat { display: inline-block; margin: 0 12px; }
+.library-number { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #6c63ff, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.library-label { font-size: 12px; color: #8888bb; margin-top: 2px; }
+.library-note { font-size: 12px; color: #6666aa; margin-top: 12px; }
+
+/* FAQ */
+.faq-section { margin: 16px 0; }
+.faq-item { border-bottom: 1px solid rgba(255,255,255,0.06); padding: 14px 0; cursor: pointer; }
+.faq-q { font-size: 14px; font-weight: 600; color: #c0c0ff; padding-right: 20px; position: relative; }
+.faq-q::after { content: '+'; position: absolute; right: 0; top: 0; color: #6c63ff; font-weight: 700; font-size: 16px; }
+.faq-item.open .faq-q::after { content: '−'; }
+.faq-a { font-size: 13px; color: #8888bb; line-height: 1.6; margin-top: 8px; display: none; }
+.faq-item.open .faq-a { display: block; }
+
+/* CTA */
+.cta-section { text-align: center; padding: 20px 0; }
+.cta-section h2 { font-size: 20px; margin-bottom: 6px; }
+.cta-section p { color: #8888bb; font-size: 14px; }
+
+/* 底部 */
+.footer-info { text-align: center; padding: 16px 0 8px; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #5555aa; }
 </style>
 </head>
 <body>
@@ -85,21 +162,184 @@ h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
   <button onclick="switchTab('workshop')">💡 灵感工坊</button>
 </div>
 
-<!-- ============ 首页 ============ -->
+<!-- ============ 首页（展示页） ============ -->
 <div id="page-home" class="page active">
-  <div style="text-align:center;padding:30px 0 20px">
-    <div style="font-size:48px;margin-bottom:12px">🚀</div>
-    <h1>5分钟，找到你的参赛方向</h1>
-    <p class="subtitle">基于真实收录的秒哒应用广场案例库，帮你从"不知道做什么"到"我有一个清晰、可落地的参赛方向"。</p>
+
+  <!-- Hero -->
+  <div class="hero-section">
+    <div class="hero-badge">🎯 造星工厂</div>
+    <h1 class="hero-title">5分钟，找到你的参赛方向</h1>
+    <p class="hero-subtitle">基于真实秒哒案例库 + LLM 创意理解，帮你从「不知道做什么」到「我有一个能做出来、有差异化的方向」。</p>
+    <button class="btn hero-btn" onclick="switchTab('quiz')">📝 开始找方向</button>
+    <button class="btn btn-secondary" onclick="switchTab('workshop')" style="margin-top:8px">💡 逛案例库找灵感</button>
+    <div class="hero-stats">
+      <span><strong id="case-count-home">30</strong> 真实案例</span>
+      <span>·</span>
+      <span><strong>LLM</strong> 创意理解</span>
+      <span>·</span>
+      <span>🔥 适合 hackathon</span>
+    </div>
   </div>
-  <div class="tags" style="justify-content:center;margin-bottom:20px">
-    <span class="tag">🎯 基于真实案例</span>
-    <span class="tag">🚫 降低撞题风险</span>
-    <span class="tag">🤖 LLM 理解创意</span>
+
+  <!-- 痛点唤起 -->
+  <div class="pain-section">
+    <h2 class="section-title">你是不是也遇到过这些问题？</h2>
+    <div class="pain-cards">
+      <div class="pain-card">
+        <div class="pain-icon">🤷</div>
+        <div class="pain-text">「完全没想法，不知道做什么能拿奖」</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon">😰</div>
+        <div class="pain-text">「我有一个想法，但怕已经有人做过了」</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon">😤</div>
+        <div class="pain-text">「花了好多时间想方向，最后发现做不出来」</div>
+      </div>
+    </div>
   </div>
-  <button class="btn" onclick="switchTab('quiz')">📝 填问卷，找方向</button>
-  <button class="btn btn-secondary" onclick="switchTab('workshop')" style="margin-top:8px">💡 直接逛案例库</button>
-  <p style="text-align:center;font-size:12px;color:#6666aa;margin-top:20px" id="case-count-footer">案例库加载中...</p>
+
+  <!-- 核心流程 -->
+  <div class="flow-section">
+    <h2 class="section-title">它是怎么工作的？</h2>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">填一份很轻的问卷</div>
+          <div class="step-desc">7 道选择题 + 1 道开放题，把你的创意写下来。5 分钟搞定。</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">LLM 理解你的创意</div>
+          <div class="step-desc">不是关键词匹配，是真的读懂你在说什么。你的每一句话都会影响结果。</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">匹配真实案例 + 生成方向卡</div>
+          <div class="step-desc">从 30+ 真实秒哒案例中找出最相关的参考，结合你的创意给出 3 个参赛方向。</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">拿着方向卡，去秒哒开干</div>
+          <div class="step-desc">每个方向卡带提示词，可以直接喂给秒哒生成 Demo。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 效果展示：前后对比 -->
+  <div class="demo-section">
+    <h2 class="section-title">看看效果对比</h2>
+    <p class="section-subtitle">同样的输入，不同引擎的差距</p>
+
+    <div class="demo-input-box">
+      <div class="demo-input-label">🧑 用户输入</div>
+      <div class="demo-input-text">「我想做一个把多巴胺理论和读书联系在一起的东西，能让用户自己设计闯关游戏，来帮助读完一本难啃的书。」</div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-card old">
+        <div class="compare-label">❌ 秒哒版（关键词规则）</div>
+        <div class="compare-title">学习成长互动模拟体验</div>
+        <div class="compare-comment">模板化拼接，完全没有理解用户说的「多巴胺」「闯关」「难啃的书」</div>
+      </div>
+      <div class="compare-vs">VS</div>
+      <div class="compare-card new">
+        <div class="compare-label">✅ 造星工厂（LLM 理解）</div>
+        <div class="compare-title compare-title-new">书悦闯关记</div>
+        <div class="compare-tags">
+          <span class="tag">多巴胺阅读闯关</span>
+          <span class="tag">闯关式阅读挑战</span>
+          <span class="tag">热爱阅读的年轻人</span>
+        </div>
+        <div class="compare-comment">读懂了「多巴胺激励」「闯关设计」「难啃的书」三个核心诉求</div>
+      </div>
+    </div>
+
+    <!-- 更多测试结果 -->
+    <div class="more-results">
+      <div class="result-item">
+        <div class="result-avatar">B</div>
+        <div class="result-content">
+          <div class="result-input">「匿名树洞+AI角色扮演，社恐年轻人的社交游乐场」</div>
+          <div class="result-output">→ <strong>幻影树洞</strong> · 匹配案例：「我的AI男友日记」45.3K浏览量</div>
+        </div>
+      </div>
+      <div class="result-item">
+        <div class="result-avatar">C</div>
+        <div class="result-content">
+          <div class="result-input">「AI生成商业计划书，输入关键词就出完整BP」</div>
+          <div class="result-output">→ <strong>BP智能工厂</strong> · 匹配 AI 工具类案例</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="demo-footnote">以上均为真实 API 输出，点击「找方向」可以亲自体验。</p>
+  </div>
+
+  <!-- 案例库规模 -->
+  <div class="library-section">
+    <div class="library-stat">
+      <div class="library-number" id="case-count-home2">30</div>
+      <div class="library-label">收录案例</div>
+    </div>
+    <div class="library-stat">
+      <div class="library-number">7</div>
+      <div class="library-label">标签维度</div>
+    </div>
+    <div class="library-stat">
+      <div class="library-number">5</div>
+      <div class="library-label">秒哒分类</div>
+    </div>
+    <p class="library-note">案例均来自秒哒应用广场真实收录，支持分类、标签、关键词筛选。持续更新中。</p>
+    <button class="btn btn-secondary" onclick="switchTab('workshop')">浏览全部案例 →</button>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <h2 class="section-title">常见问题</h2>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">这个工具对 hackathon 真的有用吗？</div>
+      <div class="faq-a">核心价值是降低「想方向」的成本。多数参赛者花 50%+ 的时间在选题和验证上，这个工具帮你 5 分钟得到经过 LLM 分析和真实案例验证的方向，剩下的时间全部用来做 demo。</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">LLM 理解准确吗？会不会瞎编？</div>
+      <div class="faq-a">LLM 做的是创意理解（主题提炼、目标用户、交互方式），不是幻想案例。匹配的案例全部来自我们收录的真实秒哒应用，每个都能在灵感工坊查到来源和数据。如果你发现不合理的地方，随时反馈，案例库和匹配算法都会持续改进。</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">我的创意会被别人看到吗？</div>
+      <div class="faq-a">所有输入仅用于当次分析，不存储不分享。你可以在「灵感工坊」浏览公开案例，但你的个人创意数据不会离开当前会话。</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">案例库怎么更新的？</div>
+      <div class="faq-a">目前由人工持续收录秒哒应用广场的热门应用。如果你在广场上看到不错的案例，可以告诉我，我会补进去。后续会加入自动巡检机制。</div>
+    </div>
+  </div>
+
+  <!-- 底部 CTA -->
+  <div class="cta-section">
+    <h2>准备好了吗？</h2>
+    <p>5 分钟，找到你的下一个参赛方向。</p>
+    <button class="btn" onclick="switchTab('quiz')" style="margin-top:12px">📝 开始找方向</button>
+  </div>
+
+  <!-- 底部信息 -->
+  <div class="footer-info">
+    <span>造星工厂 · 晓雯同学出品</span>
+    <span style="font-size:12px;color:#444477">基于真实秒哒案例 + DeepSeek LLM</span>
+  </div>
+
 </div>
 
 <!-- ============ 问卷页 ============ -->
@@ -246,11 +486,15 @@ async function loadCases() {
   } catch(e) {
     console.log("Cases load failed:", e);
   }
+  // 更新首页案例数
+  const homeEl = document.getElementById("case-count-home");
+  if (homeEl) homeEl.textContent = allCases.length;
+  const homeEl2 = document.getElementById("case-count-home2");
+  if (homeEl2) homeEl2.textContent = allCases.length;
   document.getElementById("case-count-footer").textContent =
     `当前已收录 ${allCases.length} 个应用案例，持续更新中。`;
+  if (document.getElementById("page-workshop").classList.contains("active")) renderWorkshop();
 }
-
-// ======================================================================
 // Tab 切换
 // ======================================================================
 function switchTab(tab) {
@@ -757,6 +1001,10 @@ function searchCasesDelayed() {
 
 function searchCases() {
   renderWorkshop();
+}
+
+function toggleFaq(el) {
+  el.classList.toggle('open');
 }
 </script>
 </body>
