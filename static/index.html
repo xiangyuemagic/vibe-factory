@@ -173,9 +173,8 @@ h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
 // ======================================================================
 // 常量 & 状态
 // ======================================================================
-const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
-  ? "" : "";
-// 线上部署时 /api/* 会通过 netlify.toml redirect 到 /.netlify/functions/api
+const API_BASE = "";
+// 在线版: /api/* 通过 Netlify redirect 映射到 Function
 
 const QUIZ = [
   {q:"你现在是什么参赛状态？", key:"q1", multi:false, options:[
@@ -225,6 +224,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function loadCases() {
+  try {
+    // 优先从后端 API 获取（支持筛选）
+    const r = await fetch("/api/cases");
+    if (r.ok) {
+      const data = await r.json();
+      allCases = data.cases || [];
+      document.getElementById("case-count-footer").textContent =
+        `当前已收录 ${allCases.length} 个应用案例，持续更新中。`;
+      if (document.getElementById("page-workshop").classList.contains("active")) renderWorkshop();
+      return;
+    }
+  } catch(e) {
+    console.log("API cases failed, using local:", e);
+  }
+  // 降级到本地
   try {
     const r = await fetch("cases-fallback.json");
     const data = await r.json();
