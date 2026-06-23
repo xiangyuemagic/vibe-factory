@@ -173,8 +173,9 @@ h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #c0c0ff; }
 // ======================================================================
 // 常量 & 状态
 // ======================================================================
-const API_BASE = "";
-// 简化的本地案例匹配（无需后端 API）
+const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+  ? "" : "";
+// 线上部署时 /api/* 会通过 netlify.toml redirect 到 /.netlify/functions/api
 
 const QUIZ = [
   {q:"你现在是什么参赛状态？", key:"q1", multi:false, options:[
@@ -324,7 +325,23 @@ async function submitQuiz(skip=false) {
   document.getElementById("page-loading").classList.add("active");
   document.getElementById("page-quiz").classList.remove("active");
 
-  // 纯前端规则引擎（无需后端 API）
+  // 优先调后端 API（LLM 理解），失败则降级到前端规则引擎
+  try {
+    const r = await fetch(`${API_BASE}/api/analyze`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({choices: userChoices, open_idea: openIdea})
+    });
+    if (r.ok) {
+      llmResult = await r.json();
+      showResult();
+      return;
+    }
+  } catch(e) {
+    console.log("API analyze failed, falling back to local engine:", e);
+  }
+
+  // 降级：纯前端规则引擎
   const analysis = analyzeOpenIdea(openIdea);
   const matched = matchCasesLocal(analysis);
   const cards = generateCardsLocal(analysis, matched);
