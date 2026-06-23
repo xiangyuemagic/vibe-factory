@@ -618,9 +618,15 @@ function showProfileTab(tab) {
 
 function favoriteCurrentPlan() {
   if (!currentUser) {
-    alert("请先在「我的」页面输入名字后，再收藏方案。");
-    switchTab('profile');
-    return;
+    // 未注册：在当前页弹输入框，注册完立即收藏
+    const name = prompt("收藏前先输入你的名字或昵称（仅本地保存，不会上传）：");
+    if (!name || !name.trim()) return;
+    const userId = "user_" + name.trim() + "_" + Date.now().toString(36);
+    currentUser = { name: name.trim(), id: userId };
+    localStorage.setItem("vibefactory_user", JSON.stringify(currentUser));
+    planHistory = loadPlanHistory();
+    updateProfileUI();
+    // 继续执行收藏
   }
   if (!llmResult) { alert("还没有可收藏的方案。先去生成一个方案吧！"); return; }
 
@@ -882,6 +888,23 @@ function showResult() {
   });
 
   document.getElementById("result-content").innerHTML = html;
+
+  // 恢复收藏按钮状态
+  const favBtn = document.getElementById("btn-fav");
+  if (currentUser && llmResult) {
+    const alreadyFav = planHistory.some(p =>
+      p.favorited &&
+      p.plan?.llm_analysis?.theme === llmResult.llm_analysis?.theme &&
+      p.choices?.q1 === userChoices.q1
+    );
+    favBtn.textContent = alreadyFav ? "✅ 已收藏" : "⭐ 收藏这个方案";
+    favBtn.style.borderColor = alreadyFav ? "#ffb347" : "";
+    favBtn.style.color = alreadyFav ? "#ffb347" : "";
+  } else {
+    favBtn.textContent = "⭐ 收藏这个方案";
+    favBtn.style.borderColor = "";
+    favBtn.style.color = "";
+  }
 }
 
 function showCards() {
