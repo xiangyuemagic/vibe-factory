@@ -9,13 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Netlify CLI
-        run: npm install -g netlify-cli
       - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: 2e5c958b-ce1a-4bc6-a933-6ed6fdbb9928
         run: |
+          npm install -g netlify-cli
           netlify deploy --prod \
             --dir ./static \
             --functions ./netlify/functions \
-            --site 2e5c958b-ce1a-4bc6-a933-6ed6fdbb9928 \
-            --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} \
             --message "Deploy from GitHub Actions"
