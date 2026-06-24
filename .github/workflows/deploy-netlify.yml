@@ -1,4 +1,4 @@
-name: Deploy to Netlify
+name: Deploy to Vercel
 
 on:
   push:
@@ -9,13 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Netlify
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      - name: Deploy to Vercel
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: 2e5c958b-ce1a-4bc6-a933-6ed6fdbb9928
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          npm install -g netlify-cli
-          netlify deploy --prod \
-            --dir ./static \
-            --functions ./netlify/functions \
-            --message "Deploy from GitHub Actions"
+          vercel deploy --prod --token=$VERCEL_TOKEN --yes 2>&1
